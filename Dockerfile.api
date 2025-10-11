@@ -1,0 +1,15 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY ["BlogApi/BlogApi.csproj", "BlogApi/"]
+COPY ["BlogData/BlogData.csproj", "BlogData/"]
+RUN dotnet restore "BlogApi/BlogApi.csproj"
+COPY BlogApi/. BlogApi/
+COPY BlogData/. BlogData/
+WORKDIR "/src/BlogApi"
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+EXPOSE 80
+EXPOSE 443
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "BlogApi.dll"]

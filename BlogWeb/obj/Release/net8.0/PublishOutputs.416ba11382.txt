@@ -1,0 +1,2 @@
+C:\Users\kevin\OneDrive\Desktop\Clases\IS3\API-BLOG\BlogWeb\bin\publish\emcc-props.json
+C:\Users\kevin\OneDrive\Desktop\Clases\IS3\API-BLOG\BlogWeb\bin\publish\web.config

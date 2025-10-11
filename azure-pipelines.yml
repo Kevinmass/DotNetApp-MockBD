@@ -1,0 +1,137 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  dotNetFramework: 'net8.0'
+  dotNetVersion: '8.0.x'
+  azureSubscription: 'azure-tp05-connection'
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build and Test Job'
+    steps:
+    
+    - task: UseDotNet@2
+      displayName: 'Use .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotNetVersion)'
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Build application'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish application'
+      inputs:
+        command: 'publish'
+        projects: 'BlogApi/BlogApi.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --self-contained true --runtime linux-x64'
+        publishWebProjects: true
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Blazor Web'
+      inputs:
+        command: 'publish'
+        projects: 'BlogWeb/BlogWeb.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/BlogWeb --no-build'
+        publishWebProjects: true
+
+    - script: |
+        mkdir -p $(Build.ArtifactStagingDirectory)/wwwroot
+        cp -r $(Build.ArtifactStagingDirectory)/BlogWeb/wwwroot/* $(Build.ArtifactStagingDirectory)/wwwroot/
+      displayName: 'Copy Blazor assets to API wwwroot'
+
+    - powershell: |
+        $file = "$(Build.ArtifactStagingDirectory)\wwwroot\appsettings.json"
+        (Get-Content $file) -replace '"ApiBaseUrl": "http://localhost:5001"', '"ApiBaseUrl": ""' | Set-Content $file
+      displayName: 'Configure API base URL for production'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish build artifacts'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: DeployQA
+  displayName: 'Deploy to QA'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployQAJob
+    displayName: 'Deploy to QA Environment'
+    environment: 'QA'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(Pipeline.Workspace)/artifact'
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(Pipeline.Workspace)/artifact'
+              includeRootFolder: true
+              archiveFile: '$(Pipeline.Workspace)/app.zip'
+          - task: AzureWebApp@1
+            displayName: 'Deploy to QA Web App'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'webApp'
+              appName: 'webapp-tp05-qa-massholder'
+              package: '$(Pipeline.Workspace)/app.zip'
+              deploymentMethod: 'auto'
+
+- stage: DeployPROD
+  displayName: 'Deploy to PROD'
+  dependsOn: DeployQA
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployPRODJob
+    displayName: 'Deploy to PROD Environment'
+    environment: 'PROD'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(Pipeline.Workspace)/artifact'
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(Pipeline.Workspace)/artifact'
+              includeRootFolder: true
+              archiveFile: '$(Pipeline.Workspace)/app.zip'
+          - task: AzureWebApp@1
+            displayName: 'Deploy to PROD Web App'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'webApp'
+              appName: 'webapp-tp05-prod-massholder'
+              package: '$(Pipeline.Workspace)/app.zip'
+              deploymentMethod: 'auto'
