@@ -17,7 +17,12 @@ public class LikesController : ControllerBase
         _dataService = dataService;
     }
 
-    // GET: api/likes/post/5 - Get likes for a specific post
+    /// <summary>
+    /// Obtiene todos los "me gusta" para una publicaciรณn especรญfica.
+    /// </summary>
+    /// <param name="postId">ID de la publicaciรณn.</param>
+    /// <returns>Lista de likes para la publicaciรณn.</returns>
+    /// <response code="200">Likes obtenidos exitosamente.</response>
     [HttpGet("post/{postId}")]
     public async Task<ActionResult<IEnumerable<Like>>> GetLikesForPost(int postId)
     {
@@ -25,7 +30,15 @@ public class LikesController : ControllerBase
         return likes;
     }
 
-    // POST: api/likes/post/5 - Like a post
+    /// <summary>
+    /// Da "me gusta" a una publicaciรณn.
+    /// </summary>
+    /// <param name="postId">ID de la publicaciรณn a la que dar like.</param>
+    /// <returns>Mensaje de confirmaciรณn.</returns>
+    /// <response code="200">"Me gusta" agregado exitosamente.</response>
+    /// <response code="400">ID invรกlido, ya dio like, o es su propia publicaciรณn.</response>
+    /// <response code="401">Usuario no autenticado.</response>
+    /// <response code="404">Publicaciรณn no encontrada.</response>
     [HttpPost("post/{postId}")]
     [Authorize]
     public async Task<IActionResult> LikePost(int postId)
@@ -66,7 +79,14 @@ public class LikesController : ControllerBase
         return Ok(new { Message = "Post liked successfully" });
     }
 
-    // DELETE: api/likes/post/5 - Unlike a post
+    /// <summary>
+    /// Quita el "me gusta" de una publicaciรณn.
+    /// </summary>
+    /// <param name="postId">ID de la publicaciรณn de la que quitar like.</param>
+    /// <returns>Mensaje de confirmaciรณn.</returns>
+    /// <response code="200">"Me gusta" removido exitosamente.</response>
+    /// <response code="401">Usuario no autenticado.</response>
+    /// <response code="404">"Me gusta" no encontrado.</response>
     [HttpDelete("post/{postId}")]
     [Authorize]
     public async Task<IActionResult> UnlikePost(int postId)
@@ -86,7 +106,13 @@ public class LikesController : ControllerBase
         return Ok(new { Message = "Post unliked successfully" });
     }
 
-    // GET: api/likes/post/5/status - Check if current user liked a post
+    /// <summary>
+    /// Verifica si el usuario actual dio "me gusta" a una publicación.
+    /// </summary>
+    /// <param name="postId">ID de la publicación.</param>
+    /// <returns>Estado del like (HasLiked: true/false).</returns>
+    /// <response code="200">Estado obtenido exitosamente.</response>
+    /// <response code="401">Usuario no autenticado.</response>
     [HttpGet("post/{postId}/status")]
     [Authorize]
     public async Task<IActionResult> GetLikeStatus(int postId)

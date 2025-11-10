@@ -22,7 +22,13 @@ public class AuthController : ControllerBase
         _configuration = configuration;
     }
 
-    // POST: api/auth/register
+    /// <summary>
+    /// Registra un nuevo usuario en el sistema.
+    /// </summary>
+    /// <param name="request">Datos del registro incluyendo nombre de usuario y contraseña.</param>
+    /// <returns>Token JWT y información del usuario si el registro es exitoso, o error si falla.</returns>
+    /// <response code="200">Registro exitoso con token y datos del usuario.</response>
+    /// <response code="400">Datos inválidos o usuario ya existe.</response>
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -76,7 +82,13 @@ public class AuthController : ControllerBase
         });
     }
 
-    // POST: api/auth/login
+    /// <summary>
+    /// Inicia sesión de un usuario existente.
+    /// </summary>
+    /// <param name="request">Credenciales de inicio de sesión (nombre de usuario y contraseña).</param>
+    /// <returns>Token JWT y información del usuario si las credenciales son válidas.</returns>
+    /// <response code="200">Inicio de sesión exitoso con token y datos del usuario.</response>
+    /// <response code="401">Credenciales inválidas.</response>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -109,7 +121,11 @@ public class AuthController : ControllerBase
         });
     }
 
-    // POST: api/auth/logout
+    /// <summary>
+    /// Cierra la sesión del usuario actual.
+    /// </summary>
+    /// <returns>Mensaje de confirmación de cierre de sesión.</returns>
+    /// <response code="200">Sesión cerrada exitosamente.</response>
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()
@@ -117,7 +133,13 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "Logged out successfully" });
     }
 
-    // GET: api/auth/me
+    /// <summary>
+    /// Obtiene información del usuario actualmente autenticado.
+    /// </summary>
+    /// <returns>Información básica del usuario autenticado.</returns>
+    /// <response code="200">Información del usuario obtenida exitosamente.</response>
+    /// <response code="401">Usuario no autenticado.</response>
+    /// <response code="404">Usuario no encontrado.</response>
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
@@ -138,6 +160,11 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Genera un token JWT para el usuario especificado.
+    /// </summary>
+    /// <param name="user">Usuario para el cual generar el token.</param>
+    /// <returns>Token JWT como cadena.</returns>
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");

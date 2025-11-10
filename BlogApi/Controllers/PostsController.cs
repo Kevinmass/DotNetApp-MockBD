@@ -18,7 +18,13 @@ public class PostsController : ControllerBase
         _dataService = dataService;
     }
 
-    // GET: api/posts
+    /// <summary>
+    /// Obtiene todas las publicaciones, opcionalmente filtradas por búsqueda.
+    /// </summary>
+    /// <param name="search">Término de búsqueda opcional en título o contenido.</param>
+    /// <returns>Lista de publicaciones con sus autores y likes.</returns>
+    /// <response code="200">Publicaciones obtenidas exitosamente.</response>
+    /// <response code="500">Error interno del servidor.</response>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Post>>> GetPosts([FromQuery] string? search = null)
     {
@@ -42,7 +48,13 @@ public class PostsController : ControllerBase
         }
     }
 
-    // GET: api/posts/5
+    /// <summary>
+    /// Obtiene una publicación específica por ID.
+    /// </summary>
+    /// <param name="id">ID de la publicación.</param>
+    /// <returns>Publicación con sus likes incluidos.</returns>
+    /// <response code="200">Publicación encontrada.</response>
+    /// <response code="404">Publicación no encontrada.</response>
     [HttpGet("{id}")]
     public async Task<ActionResult<Post>> GetPost(int id)
     {
@@ -60,7 +72,14 @@ public class PostsController : ControllerBase
         return post;
     }
 
-    // POST: api/posts
+    /// <summary>
+    /// Crea una nueva publicación.
+    /// </summary>
+    /// <param name="post">Datos de la publicación a crear.</param>
+    /// <returns>Publicación creada.</returns>
+    /// <response code="201">Publicación creada exitosamente.</response>
+    /// <response code="400">Datos inválidos.</response>
+    /// <response code="401">Usuario no autenticado.</response>
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<Post>> CreatePost(Post post)
@@ -98,7 +117,15 @@ public class PostsController : ControllerBase
         return CreatedAtAction(nameof(GetPost), new { id = createdPost.Id }, createdPost);
     }
 
-    // PUT: api/posts/5
+    /// <summary>
+    /// Actualiza una publicación existente.
+    /// </summary>
+    /// <param name="id">ID de la publicación a actualizar.</param>
+    /// <param name="post">Datos actualizados de la publicación.</param>
+    /// <returns>NoContent si la actualización es exitosa.</returns>
+    /// <response code="204">Publicación actualizada exitosamente.</response>
+    /// <response code="400">Datos inválidos o ID no coincide.</response>
+    /// <response code="404">Publicación no encontrada.</response>
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePost(int id, Post post)
     {
@@ -134,7 +161,13 @@ public class PostsController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/posts/5
+    /// <summary>
+    /// Elimina una publicación por ID.
+    /// </summary>
+    /// <param name="id">ID de la publicación a eliminar.</param>
+    /// <returns>NoContent si la eliminación es exitosa.</returns>
+    /// <response code="204">Publicación eliminada exitosamente.</response>
+    /// <response code="404">Publicación no encontrada.</response>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePost(int id)
     {
